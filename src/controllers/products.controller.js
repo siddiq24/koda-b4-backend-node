@@ -1,21 +1,25 @@
-const adminModel = require('../models/admin.model');
+const productModel = require('../models/products.model');
 const { validationResult } = require('express-validator');
 const sendResponse = require('../libs/response').sendResponse;
 const upload = require('../libs/upload');
+
 
 /**
  * GET /admin/products
  * @summary Retrieve all products
  * @tags Admin
- */
+*/
 async function getAllProducts(req, res) {
     try {
-        const products = await adminModel.getAllProducts();
+        const products = await productModel.getAllProducts();
         return sendResponse(res, 200, "Products retrieved successfully", products);
     } catch (error) {
         return sendResponse(res, 500, "Server error", null, error.message);
     }
-}
+} //===============================================================================
+
+
+
 
 /**
  * POST /admin/products
@@ -27,7 +31,7 @@ async function getAllProducts(req, res) {
  * @param {number} stock.formData.required - Product stock quantity
  * @return {object} 201 - Product created successfully
  * @return {object} 400 - Invalid input
- */
+*/
 async function createProduct(req, res) {
     const errors = validationResult(req);
 
@@ -39,11 +43,11 @@ async function createProduct(req, res) {
     try {
         const { title, description, basePrice, stock, picture } = req.body;
 
-        if (await adminModel.productIsExist(title)) {
+        if (await productModel.productIsExist(title)) {
             return sendResponse(res, 400, "Product with this title already exists");
         }
 
-        const newProduct = await adminModel.createProduct({
+        const newProduct = await productModel.createProduct({
             title,
             description,
             basePrice,
@@ -55,13 +59,16 @@ async function createProduct(req, res) {
     } catch (error) {
         sendResponse(res, 500, "Server error", null, error.message);
     }
-}
+} //===============================================================================
+
+
+
 
 /**
  * Product
  * @typedef {object} Upload
  * @property {string} picture - image cover - binary
- */
+*/
 
 /**
  * POST /admin/products/{id}/upload
@@ -74,7 +81,7 @@ async function createProduct(req, res) {
 async function uploadPictureProduct(req, res) {
     try {
         const id = parseInt(req.params.id);
-        const product = await adminModel.getProductById(id);
+        const product = await productModel.getProductById(id);
 
         if (!product) {
             return sendResponse(res, 404, "Product not found");
@@ -89,14 +96,17 @@ async function uploadPictureProduct(req, res) {
                 return sendResponse(res, 400, "No file uploaded");
             }
 
-            const updatedProduct = await adminModel.uploadPictureProduct(id, req.file.filename);
+            const updatedProduct = await productModel.addProductImage(id, req.file.filename);
 
             return sendResponse(res, 200, "Picture uploaded successfully", updatedProduct);
         });
     } catch (err) {
         return sendResponse(res, 500, "Server error", null, err.message);
     }
-}
+} //===============================================================================
+
+
+
 
 /**
  * PATCH /admin/products/{id}
@@ -110,12 +120,12 @@ async function uploadPictureProduct(req, res) {
  * @param {number} categoryId.formData - Category ID
  * @return {object} 200 - Product updated successfully
  * @return {object} 404 - Product not found
- */
+*/
 async function updateProduct(req, res) {
     try {
         const id = parseInt(req.params.id);
 
-        const product = await adminModel.getProductById(id);
+        const product = await productModel.getProductById(id);
         if (!product) {
             return sendResponse(res, 404, "Product not found");
         }
@@ -127,7 +137,7 @@ async function updateProduct(req, res) {
         };
 
         if (title !== undefined) {
-            if (await adminModel.productIsExist(title)) {
+            if (await productModel.productIsExist(title)) {
                 return sendResponse(res, 400, "Product with this title already exists");
             }
             updateData.title = title;
@@ -140,14 +150,14 @@ async function updateProduct(req, res) {
         }
 
         // Update produk
-        const updated = await adminModel.updateProduct(id, updateData);
+        const updated = await productModel.updateProduct(id, updateData);
 
         return sendResponse(res, 200, "Product updated successfully", updated);
 
     } catch (error) {
         return sendResponse(res, 500, "Server error", null, error.message);
     }
-}
+} //===============================================================================
 
 
 
