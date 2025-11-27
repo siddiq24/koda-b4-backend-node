@@ -1,20 +1,233 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
   output   = "../generated/prisma"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
+}
+
+model carts {
+  id           BigInt    @id @default(autoincrement())
+  user_id      BigInt?
+  product_id   BigInt?
+  size_id      Int?
+  varian_id    Int?
+  qty          Int       @default(0)
+  subtotal     Decimal   @default(0) @db.Decimal
+  product_name String?   @db.VarChar(100)
+  products     products? @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sizes        sizes?    @relation(fields: [size_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users        users?    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  variants     variants? @relation(fields: [varian_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model categories {
+  id       Int        @id @default(autoincrement())
+  name     String     @unique @db.VarChar(50)
+  products products[]
+}
+
+model deliveries {
+  id     Int      @id @default(autoincrement())
+  name   String?  @unique @db.VarChar(50)
+  orders orders[]
+}
+
+model forgot_pass_token {
+  id         BigInt    @id @default(autoincrement())
+  user_id    BigInt?
+  token      String    @unique @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(6)
+  expired_at DateTime? @db.Timestamp(6)
+  users      users?    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model orders {
+  id                BigInt           @id @default(autoincrement())
+  user_id           BigInt
+  email             String?          @db.VarChar(100)
+  fullname          String?          @db.VarChar(100)
+  phone             String?          @db.VarChar(20)
+  address           String?
+  payment_method_id Int?
+  delivery_id       Int              @default(1)
+  total_order       Decimal          @default(0) @db.Decimal
+  invoice           String?          @db.VarChar(50)
+  status_id         Int              @default(1)
+  promo_id          Int?
+  created_at        DateTime?        @default(now()) @db.Timestamp(6)
+  updated_at        DateTime?        @db.Timestamp(6)
+  deliveries        deliveries       @relation(fields: [delivery_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  payment_methods   payment_methods? @relation(fields: [payment_method_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  promos            promos?          @relation(fields: [promo_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  status            status           @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users             users            @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model orders_products {
+  invoice    String    @db.VarChar(50)
+  product_id Int
+  size_id    Int
+  varian_id  Int?
+  qty        Int?
+  subtotal   Decimal?  @db.Decimal
+  name       String?   @db.VarChar(100)
+  products   products  @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sizes      sizes     @relation(fields: [size_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  variants   variants? @relation(fields: [varian_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@ignore
+}
+
+model payment_methods {
+  id     Int      @id @default(autoincrement())
+  name   String   @unique @db.VarChar
+  image  String   @db.VarChar(100)
+  no_va  String   @db.VarChar(50)
+  orders orders[]
+}
+
+model products {
+  id              BigInt            @id @default(autoincrement())
+  title           String            @unique @db.VarChar(100)
+  description     String?           @db.VarChar(255)
+  base_price      Decimal?          @db.Decimal
+  stock           Int?
+  category_id     Int?
+  created_at      DateTime?         @default(now()) @db.Timestamp(6)
+  deleted_at      DateTime?         @db.Timestamp(6)
+  updated_at      DateTime?         @db.Timestamp(6)
+  is_favorite     Boolean?          @default(false)
+  carts           carts[]
+  orders_products orders_products[] @ignore
+  categories      categories?       @relation(fields: [category_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  products_images products_images[]
+  products_promos products_promos[] @ignore
+  products_sizes  products_sizes[]
+  products_tags   products_tags[]
+}
+
+model products_images {
+  id         BigInt    @id @default(autoincrement())
+  product_id Int?
+  image      String?   @db.VarChar(100)
+  products   products? @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model products_promos {
+  product_id Int
+  promo_id   Int
+  products   products @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  promos     promos   @relation(fields: [promo_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@ignore
+}
+
+model products_sizes {
+  product_id BigInt
+  size_id    Int
+  products   products @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sizes      sizes    @relation(fields: [size_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([product_id, size_id], map: "products_sizes_unique")
+}
+
+model products_tags {
+  product_id Int
+  tag_id     Int
+  products   products @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tags       tags     @relation(fields: [tag_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([product_id, tag_id])
+}
+
+model products_variants {
+  id         Int       @default(autoincrement())
+  product_id Int
+  variant_id Int
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+
+  @@id([variant_id, product_id])
+  @@unique([product_id, variant_id])
+}
+
+model profiles {
+  id       BigInt  @id @default(autoincrement())
+  user_id  BigInt? @unique
+  fullname String? @db.VarChar(50)
+  image    String? @db.VarChar(100)
+  phone    String? @unique @db.VarChar(20)
+  address  String? @db.VarChar
+  users    users?  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model promos {
+  id              Int               @id @default(autoincrement())
+  title           String            @db.VarChar(50)
+  description     String            @db.VarChar(255)
+  discount        Float
+  start           DateTime?         @db.Timestamp(6)
+  end             DateTime?         @db.Timestamp(6)
+  orders          orders[]
+  products_promos products_promos[] @ignore
+}
+
+model schema_migrations {
+  version BigInt  @id
+  dirty   Boolean
+}
+
+model sizes {
+  id               Int               @id @default(autoincrement())
+  name             String            @unique @db.VarChar(10)
+  additional_price Decimal           @db.Decimal
+  carts            carts[]
+  orders_products  orders_products[] @ignore
+  products_sizes   products_sizes[]
+}
+
+model status {
+  id     Int      @id @default(autoincrement())
+  name   String   @unique @db.VarChar(20)
+  orders orders[]
+}
+
+model tags {
+  id            Int             @id @default(autoincrement())
+  name          String          @db.VarChar(100)
+  products_tags products_tags[]
 }
 
 model users {
-  id         Int       @id @default(autoincrement())
-  email      String    @unique
-  password   String
-  role       String    @default("user")
-  created_at DateTime  @default(now())
-  deleted_at DateTime?
+  id                BigInt              @id @default(autoincrement())
+  email             String              @unique @db.VarChar(50)
+  password          String
+  role              String?             @default("user") @db.VarChar(20)
+  created_at        DateTime            @default(now()) @db.Timestamp(6)
+  deleted_at        DateTime?           @db.Timestamp(6)
+  carts             carts[]
+  forgot_pass_token forgot_pass_token[]
+  orders            orders[]
+  profiles          profiles?
+  users_tokens      users_tokens[]
+}
+
+model users_tokens {
+  id         BigInt    @id @default(autoincrement())
+  user_id    BigInt?
+  token      String    @unique @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(6)
+  expired_at DateTime? @db.Timestamp(6)
+  users      users?    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model variants {
+  id               Int               @id @default(autoincrement())
+  name             String            @db.VarChar(50)
+  additional_price Decimal           @default(0) @db.Decimal
+  carts            carts[]
+  orders_products  orders_products[] @ignore
 }
