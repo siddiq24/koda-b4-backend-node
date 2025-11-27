@@ -41,4 +41,11 @@ router.patch('/products/:id',
     adminController.updateProduct
 );
 
+//==============================
+// DELETE PRODUCT
+//==============================
+router.delete('/products/:id',
+    adminController.deleteProduct
+);
+
 module.exports = router;
