@@ -2,10 +2,18 @@ const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
 
-const adminController = require('../controllers/admin.controller');
+const adminController = require('../controllers/products.controller');
+const authenticate = require("../middlewares/auth.middleware");
+router.use(authenticate);
 
+//==============================
+// GET ALL PRODUCTS
+//==============================
 router.get('/products', adminController.getAllProducts);
 
+//==============================
+// CREATE NEW PRODUCT
+//==============================
 router.post('/products',
     body('title').notEmpty(),
     body('description').notEmpty(),
@@ -14,10 +22,16 @@ router.post('/products',
     adminController.createProduct
 );
 
+//==============================
+// UPLOAD PRODUCT IMAGES
+//==============================
 router.post('/products/:id/images',
     adminController.uploadPictureProduct
 );
 
+//==============================
+// UPDATE PRODUCT
+//==============================
 router.patch('/products/:id',
     body('title').optional().notEmpty(),
     body('description').optional().notEmpty(),
