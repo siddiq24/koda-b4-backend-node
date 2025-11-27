@@ -65,10 +65,9 @@ model orders {
   users             users            @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model orders_products {
   invoice    String    @db.VarChar(50)
-  product_id Int
+  product_id BigInt
   size_id    Int
   varian_id  Int?
   qty        Int?
@@ -78,7 +77,7 @@ model orders_products {
   sizes      sizes     @relation(fields: [size_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   variants   variants? @relation(fields: [varian_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@ignore
+  @@id([invoice, product_id])
 }
 
 model payment_methods {
@@ -101,29 +100,28 @@ model products {
   updated_at      DateTime?         @db.Timestamp(6)
   is_favorite     Boolean?          @default(false)
   carts           carts[]
-  orders_products orders_products[] @ignore
+  orders_products orders_products[]
   categories      categories?       @relation(fields: [category_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   products_images products_images[]
-  products_promos products_promos[] @ignore
+  products_promos products_promos[]
   products_sizes  products_sizes[]
   products_tags   products_tags[]
 }
 
 model products_images {
   id         BigInt    @id @default(autoincrement())
-  product_id Int?
+  product_id BigInt?
   image      String?   @db.VarChar(100)
   products   products? @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model products_promos {
-  product_id Int
+  product_id BigInt
   promo_id   Int
   products   products @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   promos     promos   @relation(fields: [promo_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@ignore
+  @@id([promo_id, product_id])
 }
 
 model products_sizes {
@@ -132,11 +130,12 @@ model products_sizes {
   products   products @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   sizes      sizes    @relation(fields: [size_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@id([size_id, product_id])
   @@unique([product_id, size_id], map: "products_sizes_unique")
 }
 
 model products_tags {
-  product_id Int
+  product_id BigInt
   tag_id     Int
   products   products @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tags       tags     @relation(fields: [tag_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -151,7 +150,6 @@ model products_variants {
   created_at DateTime? @default(now()) @db.Timestamp(6)
 
   @@id([variant_id, product_id])
-  @@unique([product_id, variant_id])
 }
 
 model profiles {
@@ -172,7 +170,7 @@ model promos {
   start           DateTime?         @db.Timestamp(6)
   end             DateTime?         @db.Timestamp(6)
   orders          orders[]
-  products_promos products_promos[] @ignore
+  products_promos products_promos[]
 }
 
 model schema_migrations {
@@ -185,7 +183,7 @@ model sizes {
   name             String            @unique @db.VarChar(10)
   additional_price Decimal           @db.Decimal
   carts            carts[]
-  orders_products  orders_products[] @ignore
+  orders_products  orders_products[]
   products_sizes   products_sizes[]
 }
 
@@ -229,5 +227,5 @@ model variants {
   name             String            @db.VarChar(50)
   additional_price Decimal           @default(0) @db.Decimal
   carts            carts[]
-  orders_products  orders_products[] @ignore
+  orders_products  orders_products[]
 }
