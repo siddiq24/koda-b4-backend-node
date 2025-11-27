@@ -49,4 +49,14 @@ module.exports = {
             data: data,
         });
     },
+
+    // ============================
+    addProductImage: async (productId, imageFilename) => {
+        return await prisma.productsImages.create({
+            data: {
+                productId,
+                image: imageFilename,
+            },
+        });
+    },
 };
