@@ -130,18 +130,11 @@ async function updateProduct(req, res) {
             return sendResponse(res, 404, "Product not found");
         }
 
-        const { title, description, basePrice, stock, categoryId } = req.body;
+        const { title, description, basePrice, stock, categoryId, sizes } = req.body;
 
-        const updateData = {
-            updatedAt: new Date(),
-        };
+        const updateData = { updatedAt: new Date() };
 
-        if (title !== undefined) {
-            if (await productModel.productIsExist(title)) {
-                return sendResponse(res, 400, "Product with this title already exists");
-            }
-            updateData.title = title;
-        }
+        if (title !== undefined && title !== "") updateData.title = title;
         if (description !== undefined) updateData.description = description;
         if (basePrice !== undefined) updateData.basePrice = parseFloat(basePrice);
         if (stock !== undefined) updateData.stock = parseInt(stock);
@@ -149,11 +142,37 @@ async function updateProduct(req, res) {
             updateData.categoryId = categoryId ? parseInt(categoryId) : null;
         }
 
-        // Update produk
-        const updated = await productModel.updateProduct(id, updateData);
+        // Update product
+        await productModel.updateProduct(id, updateData);
 
-        return sendResponse(res, 200, "Product updated successfully", updated);
+        // Update sizes
+        if (Array.isArray(sizes)) {
+            await productModel.updateProductSizes(id, sizes);
+        }
 
+        const newProduct = await productModel.getProductById(id);
+
+        return sendResponse(res, 200, "Product updated successfully", newProduct);
+
+    } catch (error) {
+        return sendResponse(res, 500, "Server error", null, error.message);
+    }
+}
+//===============================================================================
+
+
+async function deleteProduct(req, res) {
+    try {
+        const id = parseInt(req.params.id);
+
+        const product = await productModel.getProductById(id);
+        if (!product) {
+            return sendResponse(res, 404, "Product not found");
+        }
+
+        await productModel.deleteProduct(id);
+
+        return sendResponse(res, 200, "Product deleted successfully");
     } catch (error) {
         return sendResponse(res, 500, "Server error", null, error.message);
     }
@@ -165,5 +184,6 @@ module.exports = {
     createProduct,
     uploadPictureProduct,
     updateProduct,
-    getAllProducts
+    getAllProducts,
+    deleteProduct
 };
