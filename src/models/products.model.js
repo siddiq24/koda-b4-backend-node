@@ -1,6 +1,6 @@
-const prisma = require("../libs/prisma");
+import prisma from "../libs/prisma.config.js";
 
-module.exports = {
+const ProductsModel = {
     // ============================
     createProduct: async ({ title, description, basePrice, stock, categoryId }) => {
         return await prisma.products.create({
@@ -124,3 +124,5 @@ module.exports = {
     },
 
 };
+
+export default ProductsModel;

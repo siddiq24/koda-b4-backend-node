@@ -1,7 +1,8 @@
-const userModel = require('../models/user.model');
-const { validationResult } = require('express-validator');
-const { hashPassword, comparePassword } = require('../libs/hashPassword');
-const jwt = require('jsonwebtoken');
+import { userModel } from '../models/user.model.js';
+import validationResul from 'express-validator';
+import hashPassword from '../libs/hashPassword.js';
+import jwt from 'jsonwebtoken';
+import sendResponse from "../libs/response.js";
 
 /**
  * POST /auth/register
@@ -10,8 +11,9 @@ const jwt = require('jsonwebtoken');
  * @param {object} request.body.required - User registration data
  * @example request - Example user data
  * {
- *   "email": "example@example.com",
- *   "password": "yourpassword"
+ *   "username": "user1",
+ *   "email": "user1@example.com",
+ *   "password": "Password123"
  * }
  * @return {object} 201 - User registered successfully
  * @return {object} 400 - Email already exists
@@ -29,30 +31,24 @@ async function register(req, res) {
     }
 
     try {
-        const { email, password } = req.body;
+        const { username, email, password } = req.body;
 
         const hashedPassword = await hashPassword(password);
 
         const existing = await userModel.findUserByEmail(email);
         if (existing) {
-            return res.status(400).json({
-                success: false,
-                message: "Email already exists"
-            });
+            return sendResponse(res, 400, false, "Email already exists");
         }
 
         const newUser = await userModel.register({
+            username,
             email,
-            password: hashedPassword
+            password: hashedPassword,
         });
 
-        res.status(201).json({
-            success: true,
-            message: "User registered successfully",
-            data: newUser
-        });
+        return sendResponse(res, 201, true, "User registered successfully", newUser);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        return sendResponse(res, 500, false, error.message);
     }
 }
 
@@ -104,4 +100,4 @@ async function login(req, res) {
 }
 
 
-module.exports = { register, login };
+export default { register, login };

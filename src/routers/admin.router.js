@@ -1,9 +1,9 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const { body } = require('express-validator');
+import { body } from 'express-validator';
 
-const adminController = require('../controllers/products.controller');
-const authenticate = require("../middlewares/auth.middleware");
+import adminController from '../controllers/products.controller.js';
+import authenticate from "../middlewares/auth.middleware.js";
 router.use(authenticate);
 
 //==============================
@@ -48,4 +48,4 @@ router.delete('/products/:id',
     adminController.deleteProduct
 );
 
-module.exports = router;
+export default router;

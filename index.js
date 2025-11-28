@@ -1,10 +1,10 @@
-const express = require('express');
-const app = express();
+import router from './src/routers/index.js';
+import express from 'express';
+import swaggerjsdoc from 'express-jsdoc-swagger';
+import cleanerFile from './src/libs/cleanerFile.js';
 const port = 3000;
-const router = require('./src/routers');
-const swaggerjsdoc = require('express-jsdoc-swagger');
-const cleanerFile = require('./src/libs/cleanerFile');
 
+const app = express();
 const option = {
     info: {
         version: '1.0.0',
@@ -17,7 +17,7 @@ const option = {
     ],
     filesPattern: ['./src/**/*.js'],
     swaggerUIPath: '/api-docs',
-    baseDir: __dirname
+    baseDir: "__dirname"
 }
 
 cleanerFile()

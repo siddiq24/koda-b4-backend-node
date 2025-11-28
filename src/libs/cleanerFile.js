@@ -1,5 +1,5 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
 function cleanerFile(dir = 'uploads/') {
     if (!fs.existsSync(dir)) {
@@ -21,4 +21,4 @@ function cleanerFile(dir = 'uploads/') {
     console.log("cleaner file successfully")
 }
 
-module.exports = cleanerFile;
+export default cleanerFile;

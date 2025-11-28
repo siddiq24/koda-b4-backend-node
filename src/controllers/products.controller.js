@@ -1,7 +1,7 @@
-const productModel = require('../models/products.model');
-const { validationResult } = require('express-validator');
-const sendResponse = require('../libs/response').sendResponse;
-const upload = require('../libs/upload');
+import ProductsModel from '../models/products.model.js';
+import { validationResult } from 'express-validator';
+import sendResponse from '../libs/response.js';
+import upload from '../libs/upload.js';
 
 
 /**
@@ -11,7 +11,7 @@ const upload = require('../libs/upload');
 */
 async function getAllProducts(req, res) {
     try {
-        const products = await productModel.getAllProducts();
+        const products = await ProductsModel.getAllProducts();
         return sendResponse(res, 200, "Products retrieved successfully", products);
     } catch (error) {
         return sendResponse(res, 500, "Server error", null, error.message);
@@ -43,11 +43,11 @@ async function createProduct(req, res) {
     try {
         const { title, description, basePrice, stock, picture } = req.body;
 
-        if (await productModel.productIsExist(title)) {
+        if (await ProductsModel.productIsExist(title)) {
             return sendResponse(res, 400, "Product with this title already exists");
         }
 
-        const newProduct = await productModel.createProduct({
+        const newProduct = await ProductsModel.createProduct({
             title,
             description,
             basePrice,
@@ -81,7 +81,7 @@ async function createProduct(req, res) {
 async function uploadPictureProduct(req, res) {
     try {
         const id = parseInt(req.params.id);
-        const product = await productModel.getProductById(id);
+        const product = await ProductsModel.getProductById(id);
 
         if (!product) {
             return sendResponse(res, 404, "Product not found");
@@ -96,7 +96,7 @@ async function uploadPictureProduct(req, res) {
                 return sendResponse(res, 400, "No file uploaded");
             }
 
-            const updatedProduct = await productModel.addProductImage(id, req.file.filename);
+            const updatedProduct = await ProductsModel.addProductImage(id, req.file.filename);
 
             return sendResponse(res, 200, "Picture uploaded successfully", updatedProduct);
         });
@@ -125,7 +125,7 @@ async function updateProduct(req, res) {
     try {
         const id = parseInt(req.params.id);
 
-        const product = await productModel.getProductById(id);
+        const product = await ProductsModel.getProductById(id);
         if (!product) {
             return sendResponse(res, 404, "Product not found");
         }
@@ -143,14 +143,14 @@ async function updateProduct(req, res) {
         }
 
         // Update product
-        await productModel.updateProduct(id, updateData);
+        await ProductsModel.updateProduct(id, updateData);
 
         // Update sizes
         if (Array.isArray(sizes)) {
-            await productModel.updateProductSizes(id, sizes);
+            await ProductsModel.updateProductSizes(id, sizes);
         }
 
-        const newProduct = await productModel.getProductById(id);
+        const newProduct = await ProductsModel.getProductById(id);
 
         return sendResponse(res, 200, "Product updated successfully", newProduct);
 
@@ -165,12 +165,12 @@ async function deleteProduct(req, res) {
     try {
         const id = parseInt(req.params.id);
 
-        const product = await productModel.getProductById(id);
+        const product = await ProductsModel.getProductById(id);
         if (!product) {
             return sendResponse(res, 404, "Product not found");
         }
 
-        await productModel.deleteProduct(id);
+        await ProductsModel.deleteProduct(id);
 
         return sendResponse(res, 200, "Product deleted successfully");
     } catch (error) {
@@ -180,7 +180,7 @@ async function deleteProduct(req, res) {
 
 
 
-module.exports = {
+export default {
     createProduct,
     uploadPictureProduct,
     updateProduct,
