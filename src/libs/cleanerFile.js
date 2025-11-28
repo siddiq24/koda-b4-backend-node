@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
-function cleanerFile(dir = 'uploads/') {
+function cleanerFile(dir = '/tmp/uploads/') {
     if (!fs.existsSync(dir)) {
         console.log("Directory not found!")
         fs.mkdirSync(dir);
