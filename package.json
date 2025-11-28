@@ -15,12 +15,15 @@
     "@prisma/adapter-pg": "^7.0.1",
     "@prisma/client": "^7.0.1",
     "bcrypt": "^6.0.0",
+    "connect-redis": "^9.0.0",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "express-jsdoc-swagger": "^1.8.0",
+    "express-session": "^1.18.2",
     "express-validator": "^7.3.1",
     "jsonwebtoken": "^9.0.2",
-    "multer": "^2.0.2"
+    "multer": "^2.0.2",
+    "redis": "^5.10.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.11",
