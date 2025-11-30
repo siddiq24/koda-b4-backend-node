@@ -4,7 +4,7 @@ import path from 'path';
 function cleanerFile(dir = '/tmp/uploads/') {
     if (!fs.existsSync(dir)) {
         console.log("Directory not found!")
-        fs.mkdirSync(dir);
+        fs.mkdirSync(dir, { recursive: true });
     }
     fs.readdir(dir, (err, files) => {
         if (err) {
