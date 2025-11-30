@@ -26,60 +26,80 @@ const ProductsModel = {
     },
 
     // ============================
-    getAllProducts: async (limit, page) => {
-        const offset = (page - 1) * limit;
-        const products = await prisma.products.findMany({
-            skip: Number(offset),
-            take: Number(limit),
-            orderBy: { id: 'desc' },
-            where: { deleted_at: null },
-            include: {
-                categories: { select: { name: true } },
-                products_images: true,
-                products_sizes: {
-                    include: {
-                        sizes: true
+    getAllProducts: async (filters = {}) => {
+        try {
+            const {
+                page = 1,
+                search = '',
+                cat,
+                minPrice = 0,
+                maxPrice = 999999999,
+                shortBy = 'id',
+                asc = 'asc',
+                limit = 10
+            } = filters;
+
+            const skip = (page - 1) * limit;
+            const orderBy = { [shortBy]: asc };
+
+            const where = {
+                AND: [
+                    { deleted_at: null },
+                    {
+                        OR: [
+                            { title: { contains: search, mode: 'insensitive' } },
+                            { description: { contains: search, mode: 'insensitive' } }
+                        ]
+                    },
+                    {
+                        base_price: {
+                            gte: parseFloat(minPrice),
+                            lte: parseFloat(maxPrice)
+                        }
                     }
-                },
-                products_tags: {
-                    include: {
-                        tags: true
-                    }
-                },
-                products_variants: {
-                    include: {
-                        variants: true
-                    }
-                }
+                ]
+            };
+
+            if (filters.cat) {
+                where.AND.push({
+                    category_id: parseFloat(cat)
+                });
             }
-        });
 
-        const ress = products.map(p => ({
-            id: p.id,
-            title: p.title,
-            description: p.description,
-            basePrice: p.base_price,
-            stock: p.stock,
-            category: p.categories.name,
-            images: p.products_images.map(img => ({ id: img.id, image: img.image })),
-            sizes: p.products_sizes.map(ps => ({
-                id: ps.sizes.id,
-                name: ps.sizes.name,
-                additionalPrice: ps.sizes.additional_price
-            })),
-            tags: p.products_tags.map(pt => ({
-                id: pt.tags.id,
-                name: pt.tags.name
-            })),
-            variants: p.products_variants.map(pv => ({
-                id: pv.variants.id,
-                name: pv.variants.name,
-                additionalPrice: pv.variants.additional_price
-            }))
-        }))
+            const [products, totalCount] = await Promise.all([
+                prisma.products.findMany({
+                    where,
+                    include: {
+                        categories: true,
+                        products_images: true,
+                        products_sizes: {
+                            include: {
+                                sizes: true
+                            }
+                        },
+                        products_variants: {
+                            include: {
+                                variants: true
+                            }
+                        }
+                    },
+                    orderBy,
+                    skip,
+                    take: parseInt(limit)
+                }),
+                prisma.products.count({ where })
+            ]);
+            console.log(JSON.stringify(where, null, 2));
 
-
-        return ress;
+            return {
+                products,
+                totalCount,
+                totalPages: Math.ceil(totalCount / limit),
+                currentPage: parseInt(page)
+            };
+        } catch (error) {
+            console.error(error)
+        }
     },
 
 
@@ -129,6 +149,25 @@ const ProductsModel = {
         product.products_sizes = undefined;
 
         return product;
+    },
+
+    async getFavoriteProducts(limit = 10) {
+        return await prisma.products.findMany({
+            where: {
+                is_favorite: true,
+                deleted_at: null
+            },
+            include: {
+                categories: true,
+                products_images: true,
+                products_sizes: {
+                    include: {
+                        sizes: true
+                    }
+                }
+            },
+            take: parseInt(limit)
+        });
     },
 
     // ============================
