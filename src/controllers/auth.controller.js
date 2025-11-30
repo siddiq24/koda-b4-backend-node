@@ -1,8 +1,9 @@
 import { userModel } from '../models/user.model.js';
-import validationResul from 'express-validator';
-import hashPassword from '../libs/hashPassword.js';
+import validationResult from 'express-validator';
+import hash from '../libs/hashPassword.js';
 import jwt from 'jsonwebtoken';
 import sendResponse from "../libs/response.js";
+import serialize from '../libs/serialize.js';
 
 /**
  * POST /auth/register
@@ -33,11 +34,11 @@ async function register(req, res) {
     try {
         const { username, email, password } = req.body;
 
-        const hashedPassword = await hashPassword(password);
+        const hashedPassword = await hash.hashPassword(password);
 
         const existing = await userModel.findUserByEmail(email);
         if (existing) {
-            return sendResponse(res, 400, false, "Email already exists");
+            return sendResponse(res, 400, "Email already exists");
         }
 
         const newUser = await userModel.register({
@@ -46,9 +47,9 @@ async function register(req, res) {
             password: hashedPassword,
         });
 
-        return sendResponse(res, 201, true, "User registered successfully", newUser);
+        return sendResponse(res, 201, "User registered successfully", newUser);
     } catch (error) {
-        return sendResponse(res, 500, false, error.message);
+        return sendResponse(res, 500, error.message);
     }
 }
 
@@ -71,31 +72,25 @@ async function login(req, res) {
 
     const user = await userModel.findUserByEmail(email);
     if (!user) {
-        return res.status(400).json({
-            success: false,
-            message: "Invalid email or password"
-        });
+        return sendResponse(res, 401, "Invalid email or password");
     }
 
-    const isPasswordValid = await comparePassword(password, user.password);
+    const isPasswordValid = await hash.comparePassword(password, user.password);
     if (!isPasswordValid) {
-        return res.status(400).json({
-            success: false,
-            message: "Invalid email or password"
-        });
+        return sendResponse(res, 401, "Invalid email or password");
     }
 
     const token = jwt.sign(
-        { id: user.id, email: user.email },
+        { id: Number(user.id), email: user.email },
         process.env.JWT_SECRET,
         { expiresIn: "1h" }
     );
 
     res.json({
         success: true,
-        message: "Login successful",
-        token: `Bearer ${token}`,
-        data: user
+        message: "User logged in successfully",
+        token: token,
+        data: serialize(user),
     });
 }
 
