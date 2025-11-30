@@ -12,6 +12,11 @@ router.use(authenticate);
 router.get('/products', adminController.getAllProducts);
 
 //==============================
+// GET PRODUCT BY ID
+//==============================
+router.get('/products/:id', adminController.getProductById);
+
+//==============================
 // CREATE NEW PRODUCT
 //==============================
 router.post('/products',
@@ -28,6 +33,13 @@ router.post('/products',
 router.post('/products/:id/images',
     adminController.uploadPictureProduct
 );
+
+//==============================
+// DELETE PRODUCT IMAGES
+//==============================
+router.delete('/products/:id/images/:imgId',
+    adminController.deleteImageProducts
+)
 
 //==============================
 // UPDATE PRODUCT
