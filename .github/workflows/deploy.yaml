@@ -46,7 +46,7 @@ jobs:
 
           script: |
             cd ~/express
-            docker compose -f /home/sidik/express/docker-compose.yaml down -v
-            docker compose -f /home/sidik/express/docker-compose.yaml pull
-            docker compose -f /home/sidik/express/docker-compose.yaml up -d
+            docker compose -f /home/sidik/server/express/docker-compose.yaml down -v
+            docker compose -f /home/sidik/server/express/docker-compose.yaml pull
+            docker compose -f /home/sidik/server/express/docker-compose.yaml up -d
             docker system prune -af --volumes
