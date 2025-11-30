@@ -1,7 +1,8 @@
 import jwt from "jsonwebtoken";
+import sendResponse from "../libs/response.js";
 
 export default function authenticate(req, res, next) {
-    const authHeader = req.headers.authorization;
+    const authHeader = req?.headers?.authorization;
 
     if (!authHeader) {
         return res.status(401).json({
@@ -13,18 +14,12 @@ export default function authenticate(req, res, next) {
     const prefix = "Bearer ";
 
     if (!authHeader.startsWith(prefix)) {
-        return res.status(401).json({
-            success: false,
-            message: "Invalid prefix"
-        });
+        return sendResponse(res, 401, "invalid previx")
     }
 
     const token = authHeader.slice(prefix.length).trim();
     if (!token) {
-        return res.status(401).json({
-            success: false,
-            message: "Token missing"
-        });
+        return sendResponse(res, 401, "Token missing")
     }
 
     try {
@@ -34,9 +29,6 @@ export default function authenticate(req, res, next) {
         next();
     } catch (error) {
         console.log(error)
-        return res.status(401).json({
-            success: false,
-            message: "Invalid or expired token",
-        });
+        return sendResponse(res, 500, "Error ", null, error)
     }
 };
