@@ -45,7 +45,7 @@ async function register(req, res) {
 
         return sendResponse(res, 201, "User registered successfully", newUser);
     } catch (error) {
-        return sendResponse(res, 500, error.message,, error);
+        return sendResponse(res, 500, error.message, null, error);
     }
 }
 
