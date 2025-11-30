@@ -10,14 +10,24 @@ import upload from '../libs/upload.js';
  * @tags Admin
 */
 async function getAllProducts(req, res) {
-    const { limit = 10, page = 1 } = req.query;
     try {
-        const products = await ProductsModel.getAllProducts(limit, page);
+        const filters = req.query;
+        const products = await ProductsModel.getAllProducts(filters)
         return sendResponse(res, 200, "Products retrieved successfully", products);
     } catch (error) {
         return sendResponse(res, 500, "Server error", null, error.message);
     }
-} //===============================================================================
+}
+
+async function getFavoriteProducts(req, res) {
+    try {
+        const { limit } = req.query;
+        const products = await ProductsModel.getFavoriteProducts(limit || 6)
+        return sendResponse(res, 200, "Favorites products retrieved successfully", products);
+    } catch (error) {
+        return sendResponse(res, 500, "Server error", null, error.message);
+    }
+}
 
 
 /**
@@ -245,5 +255,6 @@ export default {
     getAllProducts,
     deleteProduct,
     getProductById,
-    deleteImageProducts
+    deleteImageProducts,
+    getFavoriteProducts
 };
