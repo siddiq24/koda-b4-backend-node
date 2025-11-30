@@ -1,5 +1,5 @@
 import { userModel } from '../models/user.model.js';
-import validationResult from 'express-validator';
+import { validationResult } from 'express-validator';
 import hash from '../libs/hashPassword.js';
 import jwt from 'jsonwebtoken';
 import sendResponse from "../libs/response.js";
@@ -24,11 +24,7 @@ async function register(req, res) {
 
     if (!errors.isEmpty()) {
         console.log(errors.array());
-        return res.status(400).json({
-            success: false,
-            message: "Invalid input",
-            errors: errors.array()
-        });
+        return sendResponse(res, 400, "Invalide input", null, errors)
     }
 
     try {
@@ -49,7 +45,7 @@ async function register(req, res) {
 
         return sendResponse(res, 201, "User registered successfully", newUser);
     } catch (error) {
-        return sendResponse(res, 500, error.message);
+        return sendResponse(res, 500, error.message,, error);
     }
 }
 
