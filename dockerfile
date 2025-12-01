@@ -1,28 +1,21 @@
 FROM node:25-alpine3.21 AS deps
-
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm ci --omit=dev
+RUN apk add --no-cache python3 make g++ bash
 
-FROM node:25-alpine3.21 AS build
+COPY package.json package-lock.json ./
+RUN npm install
 
+FROM node:25-alpine3.21 AS builder
 WORKDIR /app
 
+COPY --from=deps /app/node_modules ./node_modules
+COPY prisma ./prisma
 COPY . .
 
-RUN npx prisma generate
-COPY --from=deps /app/node_modules ./node_modules
-
-FROM node:25-alpine3.21 AS prod
-
+FROM node:25-alpine3.21 AS runner
 WORKDIR /app
 
-ENV NODE_ENV=production
-ENV PORT=3000
+COPY --from=builder /app ./
 
-COPY --from=build /app ./
-
-EXPOSE 3000
-
-CMD ["node", "index.js"]
+CMD ["sh", "-c", "npx prisma generate && node index.js"]
