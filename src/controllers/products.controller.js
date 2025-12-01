@@ -2,17 +2,43 @@ import ProductsModel from '../models/products.model.js';
 import { validationResult } from 'express-validator';
 import sendResponse from '../libs/response.js';
 import upload from '../libs/upload.js';
+import { getRedisClient } from '../libs/redis.config.js';
 
+const redis = getRedisClient()
 
 /**
  * GET /admin/products
  * @summary Retrieve all products
  * @tags Admin
-*/
+ * @security BearerAuth
+ * @param {string} search.query - Search
+ * @param {number} page.query - Page
+ * @param {number} cat.query - Category Id
+ * @param {number} minPrice.query - Minimum price
+ * @param {number} maxPrize.query - Maximum Prize
+ * @param {string} shortBy.query - Short By [ id , title] 
+ * @param {string} asc.query - Ascending or Descending
+ * @param {number} limit.query - Limit per page
+ * @return {object} 200 - User logged in successfully
+ * @return {object} 401 - Invalid email or password
+ */
 async function getAllProducts(req, res) {
     try {
-        const filters = req.query;
-        const products = await ProductsModel.getAllProducts(filters)
+        let products = {}
+        const filters = req.query
+        if (Object.keys(req.query).length === 0) {
+            products = await redis.get('products');
+            if (products) products = JSON.parse(products);
+            if (!products) {
+                products = await ProductsModel.getAllProducts(filters)
+                await redis.set('products', JSON.stringify(products, (_, value) =>
+                    typeof value === 'bigint' ? value.toString() : value
+                ), { EX: 60 * 60 });
+            }
+        } else {
+            products = await ProductsModel.getAllProducts(req.query)
+        }
+
         return sendResponse(res, 200, "Products retrieved successfully", products);
     } catch (error) {
         return sendResponse(res, 500, "Server error", null, error.message);
