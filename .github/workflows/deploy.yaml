@@ -63,12 +63,8 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           script: |
             cd ~/server
-            echo "Stopping containers..."
-            docker compose -f /home/sidik/server/docker-compose.yaml down -v
-            echo "Pulling new images..."
-            docker compose -f /home/sidik/server/docker-compose.yaml pull
-            echo "Starting containers..."
-            docker compose -f /home/sidik/server/docker-compose.yaml up -d
-            echo "Pruning unused Docker data..."
+            docker compose -f /home/sidik/server/express/docker-compose.yaml down -v
+            docker compose -f /home/sidik/server/express/docker-compose.yaml pull
+            docker compose -f /home/sidik/server/express/docker-compose.yaml up -d
             docker system prune -af --volumes
             echo "Deployment complete."
