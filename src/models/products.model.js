@@ -26,12 +26,12 @@ const ProductsModel = {
     },
 
     // ============================
-    getAllProducts: async (filters = {}) => {
+    getAllProducts: async (filters) => {
         try {
             const {
                 page = 1,
                 search = '',
-                cat,
+                cat = [],
                 minPrice = 0,
                 maxPrice = 999999999,
                 shortBy = 'id',
@@ -60,11 +60,19 @@ const ProductsModel = {
                 ]
             };
 
-            if (filters.cat) {
-                where.AND.push({
+            let conditions = { OR: [] }
+            Array.isArray(cat)
+                ? cat.map((ctgr) => {
+                    conditions.OR.push({
+                        category_id: parseFloat(ctgr)
+                    })
+                })
+                : where.AND.push({
                     category_id: parseFloat(cat)
                 });
-            }
+
+            conditions && where.AND.push(conditions)
+
 
             const [products, totalCount] = await Promise.all([
                 prisma.products.findMany({
